@@ -33,9 +33,24 @@ const app = express();
 app.disable('x-powered-by');
 app.use(securityHeaders);
 
+const allowedOrigins = env.corsOrigins;
+
 app.use(
   cors({
-    origin: env.frontendUrl,
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const normalized = origin.replace(/\/+$/, '');
+      if (allowedOrigins.includes(normalized)) {
+        callback(null, normalized);
+        return;
+      }
+
+      callback(null, false);
+    },
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Request-Id'],
@@ -69,10 +84,10 @@ app.use('/api/leaderboard', leaderboardRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-const PORT = env.port;
+// const PORT = env.port;
 
-app.listen(PORT, () => {
-  logger.info(`Listening on PORT ${PORT}`);
-});
+// app.listen(PORT, () => {
+//   logger.info(`Listening on PORT ${PORT}`);
+// });
 
 export default app;

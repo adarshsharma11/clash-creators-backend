@@ -14,6 +14,13 @@ if (!isVercel) {
   });
 }
 
+const stripTrailingSlash = (value: string): string => value.trim().replace(/\/+$/, '');
+
+const extraCorsOrigins = (process.env.CORS_ORIGINS ?? '')
+  .split(',')
+  .map(stripTrailingSlash)
+  .filter(Boolean);
+
 export const env = {
   isProduction: isProductionRuntime(),
   isDevelopment: !isProductionRuntime(),
@@ -24,7 +31,15 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '30d',
   adminJwtSecret: process.env.ADMIN_JWT_SECRET ?? process.env.JWT_SECRET ?? 'default-secret-key',
   adminJwtExpiresIn: process.env.ADMIN_JWT_EXPIRES_IN ?? '30d',
-  frontendUrl: process.env.FRONTEND_URL ?? process.env.ORIGIN ?? 'http://localhost:3000',
+  frontendUrl: stripTrailingSlash(process.env.FRONTEND_URL ?? process.env.ORIGIN ?? 'http://localhost:3000'),
+  corsOrigins: Array.from(
+    new Set([
+      stripTrailingSlash(process.env.FRONTEND_URL ?? process.env.ORIGIN ?? 'http://localhost:3000'),
+      ...extraCorsOrigins,
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+    ])
+  ),
   razorpayKeyId: process.env.RAZORPAY_KEY_ID ?? '',
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET ?? '',
   razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET ?? '',

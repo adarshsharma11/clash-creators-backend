@@ -7,7 +7,7 @@ export const securityHeaders = (_request: Request, response: Response, next: Nex
   response.setHeader('X-DNS-Prefetch-Control', 'off');
   response.setHeader('X-Download-Options', 'noopen');
   response.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
-  response.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+  response.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   response.removeHeader('X-Powered-By');
   next();
 };
