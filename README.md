@@ -2,8 +2,6 @@
 
 ## Author:
 
-[Alon](#) 
-
 ## Description:
 
 An Express-based RESTful API with TypeScript and Prisma , managing both authentication and CRUD operations.
@@ -72,3 +70,4 @@ npm run start
 ## Contributions
 
 Contributions are welcome! Feel free to submit issues, feature requests, or pull requests to enhance the functionality or fix any issues.
+# clash-creators-backend

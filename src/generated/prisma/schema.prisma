@@ -1,0 +1,350 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  CREATOR
+}
+
+enum CreatorStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum SocialPlatform {
+  INSTAGRAM
+  YOUTUBE
+  FACEBOOK
+  X
+  TIKTOK
+  TWITCH
+  OTHER
+}
+
+enum ClashStatus {
+  DRAFT
+  UPCOMING
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SupportStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  RAZORPAY
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  REJECTED
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  FAKE_ACCOUNT
+  INAPPROPRIATE_CONTENT
+  FRAUD
+  OTHER
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  fullName     String
+  passwordHash String?
+  avatarUrl    String?
+  role         UserRole @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  creatorProfile CreatorProfile?
+  supports       Support[]
+  reports        Report[]
+
+  @@index([role])
+  @@index([isActive])
+}
+
+model CreatorProfile {
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  displayName String
+  bio         String?
+  avatarUrl   String?
+  categoryId  String?
+  status      CreatorStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category          Category?              @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  socialAccounts    CreatorSocialAccount[]
+  clashParticipants ClashParticipant[]
+  supports          Support[]
+  wins              Winner[]
+  reports           Report[]
+  achievements      CreatorAchievement[]
+
+  @@index([categoryId])
+  @@index([status])
+}
+
+model CreatorSocialAccount {
+  id          String         @id @default(cuid())
+  creatorId   String
+  platform    SocialPlatform
+  username    String?
+  displayName String?
+  profileUrl  String
+  isPrimary   Boolean        @default(false)
+  isVerified  Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@unique([creatorId, platform])
+  @@index([platform])
+  @@index([profileUrl])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creators CreatorProfile[]
+  clashes  Clash[]
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model Clash {
+  id              String      @id @default(cuid())
+  title           String
+  slug            String      @unique
+  description     String?
+  categoryId      String
+  status          ClashStatus @default(DRAFT)
+  startsAt        DateTime
+  endsAt          DateTime
+  maxParticipants Int?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  category     Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  participants ClashParticipant[]
+  supports     Support[]
+  winners      Winner[]
+  reports      Report[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([startsAt])
+  @@index([endsAt])
+}
+
+model ClashParticipant {
+  id        String   @id @default(cuid())
+  clashId   String
+  creatorId String
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clash   Clash          @relation(fields: [clashId], references: [id], onDelete: Cascade)
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+
+  @@unique([clashId, creatorId])
+  @@index([creatorId])
+}
+
+/// Leaderboard totals are derived from CONFIRMED supports only.
+/// `points` must be a positive integer; enforce in application code.
+model Support {
+  id          String        @id @default(cuid())
+  supporterId String
+  creatorId   String
+  clashId     String
+  points      Int
+  status      SupportStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  supporter User           @relation(fields: [supporterId], references: [id], onDelete: Restrict)
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+  clash     Clash          @relation(fields: [clashId], references: [id], onDelete: Restrict)
+  payment   Payment?
+
+  @@index([supporterId])
+  @@index([creatorId])
+  @@index([clashId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  supportId         String          @unique
+  provider          PaymentProvider
+  providerPaymentId String?         @unique
+  razorpayOrderId   String?         @unique
+  idempotencyKey    String?         @unique
+  amount            Decimal         @db.Decimal(12, 2)
+  currency          String          @default("INR")
+  status            PaymentStatus   @default(CREATED)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  support Support @relation(fields: [supportId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Winner {
+  id        String   @id @default(cuid())
+  clashId   String
+  creatorId String
+  rank      Int
+  points    Int
+  createdAt DateTime @default(now())
+
+  clash   Clash          @relation(fields: [clashId], references: [id], onDelete: Restrict)
+  creator CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+
+  @@unique([clashId, rank])
+  @@index([creatorId])
+  @@index([createdAt])
+  @@index([clashId])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+
+  creators CreatorAchievement[]
+}
+
+model CreatorAchievement {
+  id            String   @id @default(cuid())
+  creatorId     String
+  achievementId String
+  earnedAt      DateTime @default(now())
+
+  creator     CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  achievement Achievement    @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([creatorId, achievementId])
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  reporterId   String
+  creatorId    String?
+  clashId      String?
+  reason       ReportReason
+  description  String?
+  status       ReportStatus @default(PENDING)
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  reporter   User            @relation(fields: [reporterId], references: [id], onDelete: Restrict)
+  creator    CreatorProfile? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  clash      Clash?          @relation(fields: [clashId], references: [id], onDelete: SetNull)
+  resolvedBy Admin?          @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([creatorId])
+  @@index([clashId])
+  @@index([createdAt])
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         AdminRole @default(ADMIN)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  auditLogs       AuditLog[]
+  resolvedReports Report[]
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  admin Admin? @relation(fields: [adminId], references: [id], onDelete: Restrict)
+
+  @@index([adminId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+}
+
+model PlatformSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  updatedAt   DateTime @default(now()) @updatedAt
+}
