@@ -34,10 +34,23 @@ const publicCreatorInclude = {
   },
 };
 
+const publicUsername = (creator: {
+  displayName: string;
+  user: { username: string; fullName: string; avatarUrl: string | null } | null;
+  socialAccounts: { username: string | null; isPrimary: boolean }[];
+}) =>
+  creator.user?.username ??
+  creator.socialAccounts.find((account) => account.isPrimary)?.username ??
+  creator.socialAccounts[0]?.username ??
+  creator.displayName;
+
 const findCreatorByUsername = async (username: string) => {
   const creator = await db.creatorProfile.findFirst({
     where: {
-      user: { username },
+      OR: [
+        { user: { username: { equals: username, mode: 'insensitive' } } },
+        { socialAccounts: { some: { username: { equals: username, mode: 'insensitive' } } } },
+      ],
     },
     include: publicCreatorInclude,
   });
@@ -121,11 +134,11 @@ export const listCreators = async (query: TCreatorQuery) => {
   return {
     items: creators.map((creator) => ({
       id: creator.id,
-      username: creator.user.username,
-      fullName: creator.user.fullName,
+      username: publicUsername(creator),
+      fullName: creator.user?.fullName ?? creator.displayName,
       displayName: creator.displayName,
       bio: creator.bio,
-      avatarUrl: creator.avatarUrl ?? creator.user.avatarUrl,
+      avatarUrl: creator.avatarUrl ?? creator.user?.avatarUrl ?? null,
       status: creator.status,
       category: creator.category,
       socialAccounts: creator.socialAccounts,
@@ -201,7 +214,7 @@ export const getCreatorByUsername = async (username: string) => {
     id: creator.id,
     displayName: creator.displayName,
     bio: creator.bio,
-    avatarUrl: creator.avatarUrl ?? creator.user.avatarUrl,
+    avatarUrl: creator.avatarUrl ?? creator.user?.avatarUrl ?? null,
     status: creator.status,
     user: creator.user,
     category: creator.category,
@@ -390,6 +403,9 @@ export const updateOwnCreatorProfile = async (
     },
   });
 
+  if (!creator.user) {
+    throw notFound('Creator not found', 'CREATOR_NOT_FOUND');
+  }
   return getCreatorByUsername(creator.user.username);
 };
 

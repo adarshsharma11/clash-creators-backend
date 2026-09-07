@@ -16,27 +16,40 @@ test('creator can join an upcoming clash that is not full', () => {
   assert.equal(result.ok, true);
 });
 
-test('duplicate capacity and draft/live clashes cannot be joined', () => {
-  assert.equal(
-    canJoinClash({
-      clashStatus: ClashStatus.DRAFT,
-      endsAt: new Date('2026-09-08T12:00:00.000Z'),
-      now,
-      maxParticipants: 8,
-      participantCount: 0,
-    }).ok,
-    false
-  );
-  assert.equal(
-    canJoinClash({
-      clashStatus: ClashStatus.UPCOMING,
-      endsAt: new Date('2026-09-08T12:00:00.000Z'),
-      now,
-      maxParticipants: 2,
-      participantCount: 2,
-    }).ok,
-    false
-  );
+test('duplicate capacity and draft/live/completed clashes cannot be joined', () => {
+  const draft = canJoinClash({
+    clashStatus: ClashStatus.DRAFT,
+    endsAt: new Date('2026-09-08T12:00:00.000Z'),
+    now,
+    maxParticipants: 8,
+    participantCount: 0,
+  });
+  assert.equal(draft.ok, false);
+  if (!draft.ok) {
+    assert.equal(draft.reason, 'This clash is not available for joining');
+  }
+
+  const completed = canJoinClash({
+    clashStatus: ClashStatus.COMPLETED,
+    endsAt: new Date('2026-09-08T12:00:00.000Z'),
+    now,
+    maxParticipants: 8,
+    participantCount: 0,
+  });
+  assert.equal(completed.ok, false);
+
+  const full = canJoinClash({
+    clashStatus: ClashStatus.UPCOMING,
+    endsAt: new Date('2026-09-08T12:00:00.000Z'),
+    now,
+    maxParticipants: 2,
+    participantCount: 2,
+  });
+  assert.equal(full.ok, false);
+  if (!full.ok) {
+    assert.equal(full.reason, 'This clash is full');
+    assert.equal(full.code, 'CLASH_FULL');
+  }
 });
 
 test('support is accepted only for live clashes in window', () => {

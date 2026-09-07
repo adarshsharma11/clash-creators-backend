@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import * as ClashService from '../services/clash.service';
-import { clashQuerySchema } from '../types/clash';
+import { clashQuerySchema, joinClashSchema } from '../types/clash';
 import { paginationSchema } from '../types/common';
 import { sendPaginatedResponse, sendSuccessResponse } from '../utils/responseHandler';
 import HttpStatusCode from '../utils/HttpStatusCode';
@@ -45,7 +45,8 @@ export const getWinner = async (request: Request, response: Response, next: Next
 
 export const joinClash = async (request: Request, response: Response, next: NextFunction) => {
   try {
-    const result = await ClashService.joinClash(request.params.id, request.user?.id ?? '');
+    const body = joinClashSchema.parse(request.body);
+    const result = await ClashService.joinClash(request.params.id, body);
     return sendSuccessResponse(response, result, result.alreadyJoined ? HttpStatusCode.OK : HttpStatusCode.CREATED);
   } catch (error) {
     next(error);

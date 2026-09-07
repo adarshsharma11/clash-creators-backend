@@ -1,10 +1,11 @@
 import { Prisma } from '../generated/prisma';
 import { db } from '../utils/db.server';
-import { forbidden, notFound } from '../utils/AppError';
+import { conflict, forbidden, notFound } from '../utils/AppError';
 import { buildPagination, getPagination } from '../utils/pagination';
-import { TClashQuery } from '../types/clash';
+import { TClashQuery, TJoinClash } from '../types/clash';
 import { TPaginationQuery } from '../types/common';
 import { canJoinClash } from '../domain/clash-rules';
+import { socialProfileUrl, toSocialPlatform, type JoinPlatform } from '../domain/join-identity';
 import { getClashLeaderboard, getClashLeaderboardRows } from './leaderboard.service';
 
 const publicCategorySelect = {
@@ -26,6 +27,31 @@ const publicCreatorSelect = {
     },
   },
 } as const;
+
+const joinCreatorSelect = {
+  ...publicCreatorSelect,
+  status: true,
+} as const;
+
+type JoinClashResult = {
+  joined: true;
+  alreadyJoined: boolean;
+  participant: {
+    id: string;
+    joinedAt: Date;
+    creator: unknown;
+  };
+  creator: unknown;
+  clash: {
+    id: string;
+    title: string;
+    slug: string;
+    status: string;
+    startsAt: Date;
+    endsAt: Date;
+    maxParticipants: number | null;
+  };
+};
 
 export const findClashByIdOrSlug = async (idOrSlug: string) => {
   const clash = await db.clash.findFirst({
@@ -173,94 +199,187 @@ export const getClashWinner = async (idOrSlug: string) => {
   };
 };
 
-export const joinClash = async (idOrSlug: string, userId: string) => {
-  return db.$transaction(async (tx) => {
-    const clash = await tx.clash.findFirst({
-      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
-    });
-    if (!clash) {
-      throw notFound('Clash not found', 'CLASH_NOT_FOUND');
-    }
+const toJoinResponse = (input: {
+  alreadyJoined: boolean;
+  participant: { id: string; joinedAt: Date; creator: unknown };
+  clash: {
+    id: string;
+    title: string;
+    slug: string;
+    status: string;
+    startsAt: Date;
+    endsAt: Date;
+    maxParticipants: number | null;
+  };
+}) => ({
+  joined: true as const,
+  alreadyJoined: input.alreadyJoined,
+  participant: input.participant,
+  creator: input.participant.creator,
+  clash: input.clash,
+});
 
-    const creator = await tx.creatorProfile.findUnique({
-      where: { userId },
-    });
-    if (!creator) {
-      throw forbidden('A creator profile is required to join a clash');
-    }
-    if (creator.status !== 'ACTIVE') {
+const resolveJoinCreator = async (input: { username: string; platform: JoinPlatform }) => {
+  const matches = await db.creatorSocialAccount.findMany({
+    where: {
+      platform: toSocialPlatform(input.platform),
+      username: { equals: input.username, mode: 'insensitive' },
+    },
+    include: {
+      creator: {
+        select: joinCreatorSelect,
+      },
+    },
+  });
+
+  if (matches.length > 1) {
+    throw conflict('Multiple creators match this platform and username', 'CREATOR_AMBIGUOUS');
+  }
+
+  if (matches[0]) {
+    if (matches[0].creator.status !== 'ACTIVE') {
       throw forbidden('Only active creators can join clashes');
     }
+    return matches[0].creator;
+  }
 
-    const existing = await tx.clashParticipant.findUnique({
-      where: {
-        clashId_creatorId: {
-          clashId: clash.id,
-          creatorId: creator.id,
-        },
-      },
-      include: {
-        creator: { select: publicCreatorSelect },
-      },
-    });
-    if (existing) {
-      return {
-        alreadyJoined: true,
-        participant: {
-          id: existing.id,
-          joinedAt: existing.joinedAt,
-          creator: existing.creator,
-        },
-        clash: {
-          id: clash.id,
-          title: clash.title,
-          slug: clash.slug,
-          status: clash.status,
-          startsAt: clash.startsAt,
-          endsAt: clash.endsAt,
-          maxParticipants: clash.maxParticipants,
-        },
-      };
-    }
-
-    const participantCount = await tx.clashParticipant.count({ where: { clashId: clash.id } });
-    const joinCheck = canJoinClash({
-      clashStatus: clash.status,
-      endsAt: clash.endsAt,
-      now: new Date(),
-      maxParticipants: clash.maxParticipants,
-      participantCount,
-    });
-    if (!joinCheck.ok) {
-      throw forbidden(joinCheck.reason, 'CLASH_NOT_ACTIVE');
-    }
-
-    const participant = await tx.clashParticipant.create({
+  try {
+    return await db.creatorProfile.create({
       data: {
+        displayName: input.username,
+        status: 'ACTIVE',
+        socialAccounts: {
+          create: {
+            platform: toSocialPlatform(input.platform),
+            username: input.username,
+            displayName: input.username,
+            profileUrl: socialProfileUrl(input.platform, input.username),
+            isPrimary: true,
+          },
+        },
+      },
+      select: joinCreatorSelect,
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const existing = await db.creatorSocialAccount.findFirst({
+        where: {
+          platform: toSocialPlatform(input.platform),
+          username: { equals: input.username, mode: 'insensitive' },
+        },
+        include: { creator: { select: joinCreatorSelect } },
+      });
+      if (existing?.creator.status === 'ACTIVE') {
+        return existing.creator;
+      }
+    }
+    throw error;
+  }
+};
+
+export const joinClash = async (idOrSlug: string, input: TJoinClash): Promise<JoinClashResult> => {
+  const clash = await db.clash.findFirst({
+    where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
+  });
+  if (!clash) {
+    throw notFound('Clash not found', 'CLASH_NOT_FOUND');
+  }
+
+  const creator = await resolveJoinCreator({
+    username: input.username,
+    platform: input.platform as JoinPlatform,
+  });
+
+  const clashPayload = {
+    id: clash.id,
+    title: clash.title,
+    slug: clash.slug,
+    status: clash.status,
+    startsAt: clash.startsAt,
+    endsAt: clash.endsAt,
+    maxParticipants: clash.maxParticipants,
+  };
+
+  const existing = await db.clashParticipant.findUnique({
+    where: {
+      clashId_creatorId: {
         clashId: clash.id,
         creatorId: creator.id,
       },
-      include: {
-        creator: { select: publicCreatorSelect },
-      },
-    });
-
-    return {
-      alreadyJoined: false,
-      participant: {
-        id: participant.id,
-        joinedAt: participant.joinedAt,
-        creator: participant.creator,
-      },
-      clash: {
-        id: clash.id,
-        title: clash.title,
-        slug: clash.slug,
-        status: clash.status,
-        startsAt: clash.startsAt,
-        endsAt: clash.endsAt,
-        maxParticipants: clash.maxParticipants,
-      },
-    };
+    },
+    include: {
+      creator: { select: publicCreatorSelect },
+    },
   });
+  if (existing) {
+    return toJoinResponse({
+      alreadyJoined: true,
+      participant: {
+        id: existing.id,
+        joinedAt: existing.joinedAt,
+        creator: existing.creator,
+      },
+      clash: clashPayload,
+    });
+  }
+
+  return db.$transaction(
+    async (tx) => {
+      const already = await tx.clashParticipant.findUnique({
+        where: {
+          clashId_creatorId: {
+            clashId: clash.id,
+            creatorId: creator.id,
+          },
+        },
+        include: {
+          creator: { select: publicCreatorSelect },
+        },
+      });
+      if (already) {
+        return toJoinResponse({
+          alreadyJoined: true,
+          participant: {
+            id: already.id,
+            joinedAt: already.joinedAt,
+            creator: already.creator,
+          },
+          clash: clashPayload,
+        });
+      }
+
+      const participantCount = await tx.clashParticipant.count({ where: { clashId: clash.id } });
+      const joinCheck = canJoinClash({
+        clashStatus: clash.status,
+        endsAt: clash.endsAt,
+        now: new Date(),
+        maxParticipants: clash.maxParticipants,
+        participantCount,
+      });
+      if (!joinCheck.ok) {
+        throw forbidden(joinCheck.reason, joinCheck.code);
+      }
+
+      const participant = await tx.clashParticipant.create({
+        data: {
+          clashId: clash.id,
+          creatorId: creator.id,
+        },
+        include: {
+          creator: { select: publicCreatorSelect },
+        },
+      });
+
+      return toJoinResponse({
+        alreadyJoined: false,
+        participant: {
+          id: participant.id,
+          joinedAt: participant.joinedAt,
+          creator: participant.creator,
+        },
+        clash: clashPayload,
+      });
+    },
+    { maxWait: 10_000, timeout: 15_000 }
+  );
 };

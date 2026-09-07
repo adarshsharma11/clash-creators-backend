@@ -55,6 +55,19 @@ npm install
 cp .env.example .env
 ```
 
+## Public clash join
+
+`POST /api/clashes/:id/join` is public. No JWT cookie is required.
+
+```json
+{
+  "username": "learn_with_sam",
+  "platform": "INSTAGRAM"
+}
+```
+
+Authenticated user flows (`/api/support`, payments, reports, `/api/auth/*`) are unchanged.
+
 ## Running Locally
 
 ```bash

@@ -84,10 +84,10 @@ app.use('/api/leaderboard', leaderboardRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// const PORT = env.port;
-
-// app.listen(PORT, () => {
-//   logger.info(`Listening on PORT ${PORT}`);
-// });
+if (!process.env.VERCEL) {
+  app.listen(env.port, () => {
+    logger.info(`Listening on PORT ${env.port}`);
+  });
+}
 
 export default app;

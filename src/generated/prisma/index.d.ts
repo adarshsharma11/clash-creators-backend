@@ -3686,7 +3686,7 @@ export namespace Prisma {
 
   export type CreatorProfileGroupByOutputType = {
     id: string
-    userId: string
+    userId: string | null
     displayName: string
     bio: string | null
     avatarUrl: string | null
@@ -3723,7 +3723,7 @@ export namespace Prisma {
     status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
+    user?: boolean | CreatorProfile$userArgs<ExtArgs>
     category?: boolean | CreatorProfile$categoryArgs<ExtArgs>
     socialAccounts?: boolean | CreatorProfile$socialAccountsArgs<ExtArgs>
     clashParticipants?: boolean | CreatorProfile$clashParticipantsArgs<ExtArgs>
@@ -3744,7 +3744,7 @@ export namespace Prisma {
     status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
+    user?: boolean | CreatorProfile$userArgs<ExtArgs>
     category?: boolean | CreatorProfile$categoryArgs<ExtArgs>
   }, ExtArgs["result"]["creatorProfile"]>
 
@@ -3761,7 +3761,7 @@ export namespace Prisma {
   }
 
   export type CreatorProfileInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
+    user?: boolean | CreatorProfile$userArgs<ExtArgs>
     category?: boolean | CreatorProfile$categoryArgs<ExtArgs>
     socialAccounts?: boolean | CreatorProfile$socialAccountsArgs<ExtArgs>
     clashParticipants?: boolean | CreatorProfile$clashParticipantsArgs<ExtArgs>
@@ -3772,14 +3772,14 @@ export namespace Prisma {
     _count?: boolean | CreatorProfileCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CreatorProfileIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
+    user?: boolean | CreatorProfile$userArgs<ExtArgs>
     category?: boolean | CreatorProfile$categoryArgs<ExtArgs>
   }
 
   export type $CreatorProfilePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "CreatorProfile"
     objects: {
-      user: Prisma.$UserPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs> | null
       category: Prisma.$CategoryPayload<ExtArgs> | null
       socialAccounts: Prisma.$CreatorSocialAccountPayload<ExtArgs>[]
       clashParticipants: Prisma.$ClashParticipantPayload<ExtArgs>[]
@@ -3790,7 +3790,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      userId: string
+      userId: string | null
       displayName: string
       bio: string | null
       avatarUrl: string | null
@@ -4162,7 +4162,7 @@ export namespace Prisma {
    */
   export interface Prisma__CreatorProfileClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    user<T extends CreatorProfile$userArgs<ExtArgs> = {}>(args?: Subset<T, CreatorProfile$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     category<T extends CreatorProfile$categoryArgs<ExtArgs> = {}>(args?: Subset<T, CreatorProfile$categoryArgs<ExtArgs>>): Prisma__CategoryClient<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     socialAccounts<T extends CreatorProfile$socialAccountsArgs<ExtArgs> = {}>(args?: Subset<T, CreatorProfile$socialAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CreatorSocialAccountPayload<ExtArgs>, T, "findMany"> | Null>
     clashParticipants<T extends CreatorProfile$clashParticipantsArgs<ExtArgs> = {}>(args?: Subset<T, CreatorProfile$clashParticipantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClashParticipantPayload<ExtArgs>, T, "findMany"> | Null>
@@ -4523,6 +4523,21 @@ export namespace Prisma {
      * Filter which CreatorProfiles to delete
      */
     where?: CreatorProfileWhereInput
+  }
+
+  /**
+   * CreatorProfile.user
+   */
+  export type CreatorProfile$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
   }
 
   /**
@@ -18286,7 +18301,7 @@ export namespace Prisma {
     OR?: CreatorProfileWhereInput[]
     NOT?: CreatorProfileWhereInput | CreatorProfileWhereInput[]
     id?: StringFilter<"CreatorProfile"> | string
-    userId?: StringFilter<"CreatorProfile"> | string
+    userId?: StringNullableFilter<"CreatorProfile"> | string | null
     displayName?: StringFilter<"CreatorProfile"> | string
     bio?: StringNullableFilter<"CreatorProfile"> | string | null
     avatarUrl?: StringNullableFilter<"CreatorProfile"> | string | null
@@ -18294,7 +18309,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFilter<"CreatorProfile"> | $Enums.CreatorStatus
     createdAt?: DateTimeFilter<"CreatorProfile"> | Date | string
     updatedAt?: DateTimeFilter<"CreatorProfile"> | Date | string
-    user?: XOR<UserRelationFilter, UserWhereInput>
+    user?: XOR<UserNullableRelationFilter, UserWhereInput> | null
     category?: XOR<CategoryNullableRelationFilter, CategoryWhereInput> | null
     socialAccounts?: CreatorSocialAccountListRelationFilter
     clashParticipants?: ClashParticipantListRelationFilter
@@ -18306,7 +18321,7 @@ export namespace Prisma {
 
   export type CreatorProfileOrderByWithRelationInput = {
     id?: SortOrder
-    userId?: SortOrder
+    userId?: SortOrderInput | SortOrder
     displayName?: SortOrder
     bio?: SortOrderInput | SortOrder
     avatarUrl?: SortOrderInput | SortOrder
@@ -18337,7 +18352,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFilter<"CreatorProfile"> | $Enums.CreatorStatus
     createdAt?: DateTimeFilter<"CreatorProfile"> | Date | string
     updatedAt?: DateTimeFilter<"CreatorProfile"> | Date | string
-    user?: XOR<UserRelationFilter, UserWhereInput>
+    user?: XOR<UserNullableRelationFilter, UserWhereInput> | null
     category?: XOR<CategoryNullableRelationFilter, CategoryWhereInput> | null
     socialAccounts?: CreatorSocialAccountListRelationFilter
     clashParticipants?: ClashParticipantListRelationFilter
@@ -18349,7 +18364,7 @@ export namespace Prisma {
 
   export type CreatorProfileOrderByWithAggregationInput = {
     id?: SortOrder
-    userId?: SortOrder
+    userId?: SortOrderInput | SortOrder
     displayName?: SortOrder
     bio?: SortOrderInput | SortOrder
     avatarUrl?: SortOrderInput | SortOrder
@@ -18367,7 +18382,7 @@ export namespace Prisma {
     OR?: CreatorProfileScalarWhereWithAggregatesInput[]
     NOT?: CreatorProfileScalarWhereWithAggregatesInput | CreatorProfileScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"CreatorProfile"> | string
-    userId?: StringWithAggregatesFilter<"CreatorProfile"> | string
+    userId?: StringNullableWithAggregatesFilter<"CreatorProfile"> | string | null
     displayName?: StringWithAggregatesFilter<"CreatorProfile"> | string
     bio?: StringNullableWithAggregatesFilter<"CreatorProfile"> | string | null
     avatarUrl?: StringNullableWithAggregatesFilter<"CreatorProfile"> | string | null
@@ -18411,6 +18426,7 @@ export namespace Prisma {
   export type CreatorSocialAccountWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     creatorId_platform?: CreatorSocialAccountCreatorIdPlatformCompoundUniqueInput
+    platform_username?: CreatorSocialAccountPlatformUsernameCompoundUniqueInput
     AND?: CreatorSocialAccountWhereInput | CreatorSocialAccountWhereInput[]
     OR?: CreatorSocialAccountWhereInput[]
     NOT?: CreatorSocialAccountWhereInput | CreatorSocialAccountWhereInput[]
@@ -18424,7 +18440,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"CreatorSocialAccount"> | Date | string
     updatedAt?: DateTimeFilter<"CreatorSocialAccount"> | Date | string
     creator?: XOR<CreatorProfileRelationFilter, CreatorProfileWhereInput>
-  }, "id" | "creatorId_platform">
+  }, "id" | "creatorId_platform" | "platform_username">
 
   export type CreatorSocialAccountOrderByWithAggregationInput = {
     id?: SortOrder
@@ -19449,7 +19465,7 @@ export namespace Prisma {
     status?: $Enums.CreatorStatus
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutCreatorProfileInput
+    user?: UserCreateNestedOneWithoutCreatorProfileInput
     category?: CategoryCreateNestedOneWithoutCreatorsInput
     socialAccounts?: CreatorSocialAccountCreateNestedManyWithoutCreatorInput
     clashParticipants?: ClashParticipantCreateNestedManyWithoutCreatorInput
@@ -19461,7 +19477,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedCreateInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -19485,7 +19501,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFieldUpdateOperationsInput | $Enums.CreatorStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutCreatorProfileNestedInput
+    user?: UserUpdateOneWithoutCreatorProfileNestedInput
     category?: CategoryUpdateOneWithoutCreatorsNestedInput
     socialAccounts?: CreatorSocialAccountUpdateManyWithoutCreatorNestedInput
     clashParticipants?: ClashParticipantUpdateManyWithoutCreatorNestedInput
@@ -19497,7 +19513,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -19515,7 +19531,7 @@ export namespace Prisma {
 
   export type CreatorProfileCreateManyInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -19537,7 +19553,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20761,9 +20777,9 @@ export namespace Prisma {
     not?: NestedEnumCreatorStatusFilter<$PrismaModel> | $Enums.CreatorStatus
   }
 
-  export type UserRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
+  export type UserNullableRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
   }
 
   export type CategoryNullableRelationFilter = {
@@ -20872,6 +20888,11 @@ export namespace Prisma {
   export type CreatorSocialAccountCreatorIdPlatformCompoundUniqueInput = {
     creatorId: string
     platform: $Enums.SocialPlatform
+  }
+
+  export type CreatorSocialAccountPlatformUsernameCompoundUniqueInput = {
+    platform: $Enums.SocialPlatform
+    username: string
   }
 
   export type CreatorSocialAccountCountOrderByAggregateInput = {
@@ -21155,6 +21176,11 @@ export namespace Prisma {
     in?: $Enums.SupportStatus[] | ListEnumSupportStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.SupportStatus[] | ListEnumSupportStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumSupportStatusFilter<$PrismaModel> | $Enums.SupportStatus
+  }
+
+  export type UserRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
   }
 
   export type PaymentNullableRelationFilter = {
@@ -21983,10 +22009,12 @@ export namespace Prisma {
     set?: $Enums.CreatorStatus
   }
 
-  export type UserUpdateOneRequiredWithoutCreatorProfileNestedInput = {
+  export type UserUpdateOneWithoutCreatorProfileNestedInput = {
     create?: XOR<UserCreateWithoutCreatorProfileInput, UserUncheckedCreateWithoutCreatorProfileInput>
     connectOrCreate?: UserCreateOrConnectWithoutCreatorProfileInput
     upsert?: UserUpsertWithoutCreatorProfileInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCreatorProfileInput, UserUpdateWithoutCreatorProfileInput>, UserUncheckedUpdateWithoutCreatorProfileInput>
   }
@@ -24016,7 +24044,7 @@ export namespace Prisma {
     status?: $Enums.CreatorStatus
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutCreatorProfileInput
+    user?: UserCreateNestedOneWithoutCreatorProfileInput
     category?: CategoryCreateNestedOneWithoutCreatorsInput
     clashParticipants?: ClashParticipantCreateNestedManyWithoutCreatorInput
     supports?: SupportCreateNestedManyWithoutCreatorInput
@@ -24027,7 +24055,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedCreateWithoutSocialAccountsInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -24066,7 +24094,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFieldUpdateOperationsInput | $Enums.CreatorStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutCreatorProfileNestedInput
+    user?: UserUpdateOneWithoutCreatorProfileNestedInput
     category?: CategoryUpdateOneWithoutCreatorsNestedInput
     clashParticipants?: ClashParticipantUpdateManyWithoutCreatorNestedInput
     supports?: SupportUpdateManyWithoutCreatorNestedInput
@@ -24077,7 +24105,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateWithoutSocialAccountsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24100,7 +24128,7 @@ export namespace Prisma {
     status?: $Enums.CreatorStatus
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutCreatorProfileInput
+    user?: UserCreateNestedOneWithoutCreatorProfileInput
     socialAccounts?: CreatorSocialAccountCreateNestedManyWithoutCreatorInput
     clashParticipants?: ClashParticipantCreateNestedManyWithoutCreatorInput
     supports?: SupportCreateNestedManyWithoutCreatorInput
@@ -24111,7 +24139,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedCreateWithoutCategoryInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -24201,7 +24229,7 @@ export namespace Prisma {
     OR?: CreatorProfileScalarWhereInput[]
     NOT?: CreatorProfileScalarWhereInput | CreatorProfileScalarWhereInput[]
     id?: StringFilter<"CreatorProfile"> | string
-    userId?: StringFilter<"CreatorProfile"> | string
+    userId?: StringNullableFilter<"CreatorProfile"> | string | null
     displayName?: StringFilter<"CreatorProfile"> | string
     bio?: StringNullableFilter<"CreatorProfile"> | string | null
     avatarUrl?: StringNullableFilter<"CreatorProfile"> | string | null
@@ -24543,7 +24571,7 @@ export namespace Prisma {
     status?: $Enums.CreatorStatus
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutCreatorProfileInput
+    user?: UserCreateNestedOneWithoutCreatorProfileInput
     category?: CategoryCreateNestedOneWithoutCreatorsInput
     socialAccounts?: CreatorSocialAccountCreateNestedManyWithoutCreatorInput
     supports?: SupportCreateNestedManyWithoutCreatorInput
@@ -24554,7 +24582,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedCreateWithoutClashParticipantsInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -24638,7 +24666,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFieldUpdateOperationsInput | $Enums.CreatorStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutCreatorProfileNestedInput
+    user?: UserUpdateOneWithoutCreatorProfileNestedInput
     category?: CategoryUpdateOneWithoutCreatorsNestedInput
     socialAccounts?: CreatorSocialAccountUpdateManyWithoutCreatorNestedInput
     supports?: SupportUpdateManyWithoutCreatorNestedInput
@@ -24649,7 +24677,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateWithoutClashParticipantsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24707,7 +24735,7 @@ export namespace Prisma {
     status?: $Enums.CreatorStatus
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutCreatorProfileInput
+    user?: UserCreateNestedOneWithoutCreatorProfileInput
     category?: CategoryCreateNestedOneWithoutCreatorsInput
     socialAccounts?: CreatorSocialAccountCreateNestedManyWithoutCreatorInput
     clashParticipants?: ClashParticipantCreateNestedManyWithoutCreatorInput
@@ -24718,7 +24746,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedCreateWithoutSupportsInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -24868,7 +24896,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFieldUpdateOperationsInput | $Enums.CreatorStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutCreatorProfileNestedInput
+    user?: UserUpdateOneWithoutCreatorProfileNestedInput
     category?: CategoryUpdateOneWithoutCreatorsNestedInput
     socialAccounts?: CreatorSocialAccountUpdateManyWithoutCreatorNestedInput
     clashParticipants?: ClashParticipantUpdateManyWithoutCreatorNestedInput
@@ -24879,7 +24907,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateWithoutSupportsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25083,7 +25111,7 @@ export namespace Prisma {
     status?: $Enums.CreatorStatus
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutCreatorProfileInput
+    user?: UserCreateNestedOneWithoutCreatorProfileInput
     category?: CategoryCreateNestedOneWithoutCreatorsInput
     socialAccounts?: CreatorSocialAccountCreateNestedManyWithoutCreatorInput
     clashParticipants?: ClashParticipantCreateNestedManyWithoutCreatorInput
@@ -25094,7 +25122,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedCreateWithoutWinsInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -25178,7 +25206,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFieldUpdateOperationsInput | $Enums.CreatorStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutCreatorProfileNestedInput
+    user?: UserUpdateOneWithoutCreatorProfileNestedInput
     category?: CategoryUpdateOneWithoutCreatorsNestedInput
     socialAccounts?: CreatorSocialAccountUpdateManyWithoutCreatorNestedInput
     clashParticipants?: ClashParticipantUpdateManyWithoutCreatorNestedInput
@@ -25189,7 +25217,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateWithoutWinsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25250,7 +25278,7 @@ export namespace Prisma {
     status?: $Enums.CreatorStatus
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutCreatorProfileInput
+    user?: UserCreateNestedOneWithoutCreatorProfileInput
     category?: CategoryCreateNestedOneWithoutCreatorsInput
     socialAccounts?: CreatorSocialAccountCreateNestedManyWithoutCreatorInput
     clashParticipants?: ClashParticipantCreateNestedManyWithoutCreatorInput
@@ -25261,7 +25289,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedCreateWithoutAchievementsInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -25323,7 +25351,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFieldUpdateOperationsInput | $Enums.CreatorStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutCreatorProfileNestedInput
+    user?: UserUpdateOneWithoutCreatorProfileNestedInput
     category?: CategoryUpdateOneWithoutCreatorsNestedInput
     socialAccounts?: CreatorSocialAccountUpdateManyWithoutCreatorNestedInput
     clashParticipants?: ClashParticipantUpdateManyWithoutCreatorNestedInput
@@ -25334,7 +25362,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateWithoutAchievementsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25421,7 +25449,7 @@ export namespace Prisma {
     status?: $Enums.CreatorStatus
     createdAt?: Date | string
     updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutCreatorProfileInput
+    user?: UserCreateNestedOneWithoutCreatorProfileInput
     category?: CategoryCreateNestedOneWithoutCreatorsInput
     socialAccounts?: CreatorSocialAccountCreateNestedManyWithoutCreatorInput
     clashParticipants?: ClashParticipantCreateNestedManyWithoutCreatorInput
@@ -25432,7 +25460,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedCreateWithoutReportsInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -25582,7 +25610,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFieldUpdateOperationsInput | $Enums.CreatorStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutCreatorProfileNestedInput
+    user?: UserUpdateOneWithoutCreatorProfileNestedInput
     category?: CategoryUpdateOneWithoutCreatorsNestedInput
     socialAccounts?: CreatorSocialAccountUpdateManyWithoutCreatorNestedInput
     clashParticipants?: ClashParticipantUpdateManyWithoutCreatorNestedInput
@@ -25593,7 +25621,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateWithoutReportsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26193,7 +26221,7 @@ export namespace Prisma {
 
   export type CreatorProfileCreateManyCategoryInput = {
     id?: string
-    userId: string
+    userId?: string | null
     displayName: string
     bio?: string | null
     avatarUrl?: string | null
@@ -26223,7 +26251,7 @@ export namespace Prisma {
     status?: EnumCreatorStatusFieldUpdateOperationsInput | $Enums.CreatorStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutCreatorProfileNestedInput
+    user?: UserUpdateOneWithoutCreatorProfileNestedInput
     socialAccounts?: CreatorSocialAccountUpdateManyWithoutCreatorNestedInput
     clashParticipants?: ClashParticipantUpdateManyWithoutCreatorNestedInput
     supports?: SupportUpdateManyWithoutCreatorNestedInput
@@ -26234,7 +26262,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateWithoutCategoryInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26251,7 +26279,7 @@ export namespace Prisma {
 
   export type CreatorProfileUncheckedUpdateManyWithoutCategoryInput = {
     id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
     displayName?: StringFieldUpdateOperationsInput | string
     bio?: NullableStringFieldUpdateOperationsInput | string | null
     avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
