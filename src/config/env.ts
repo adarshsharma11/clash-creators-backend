@@ -1,15 +1,22 @@
 import * as dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
+const isVercel = Boolean(process.env.VERCEL);
+const isProductionRuntime = (): boolean =>
+  process.env.NODE_ENV === 'production' || process.env.APP_ENV === 'production' || isVercel;
 
-const isProduction = (): boolean =>
-  process.env.NODE_ENV === 'production' || process.env.APP_ENV === 'production';
+if (!isVercel) {
+  dotenv.config({ quiet: true, path: path.resolve(process.cwd(), '.env') });
+  dotenv.config({
+    quiet: true,
+    path: path.resolve(process.cwd(), '.env.local'),
+    override: true,
+  });
+}
 
 export const env = {
-  isProduction: isProduction(),
-  isDevelopment: !isProduction(),
+  isProduction: isProductionRuntime(),
+  isDevelopment: !isProductionRuntime(),
   nodeEnv: process.env.NODE_ENV ?? process.env.APP_ENV ?? 'development',
   port: Number(process.env.PORT ?? 6001),
   databaseUrl: process.env.DATABASE_URL ?? '',

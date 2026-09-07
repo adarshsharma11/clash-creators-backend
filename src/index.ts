@@ -1,5 +1,3 @@
-import * as dotenv from 'dotenv';
-import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -24,9 +22,6 @@ import { securityHeaders } from './middleware/security-headers';
 import { env, validateEnv } from './config/env';
 import * as HealthController from './controllers/health.controller';
 import * as PaymentController from './controllers/payment.controller';
-
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local'), override: true });
 
 validateEnv();
 
