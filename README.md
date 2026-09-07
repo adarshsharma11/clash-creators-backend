@@ -42,7 +42,7 @@ An Express-based RESTful API with TypeScript and Prisma , managing both authenti
 #### Clone the repo:
 
 ```bash
-git clone https://github.com/adarshsharma11/Truck-Tactis-Backend.git
+git clone <repository-url>
 ```
 
 #### Install dependencies:

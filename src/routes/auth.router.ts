@@ -1,15 +1,13 @@
 import express from 'express';
 import * as AuthController from '../controllers/auth.controller';
-import { protectAuth } from '../middleware/auth-middleware';
+import { requireAuth } from '../middleware/auth-middleware';
+import { authRateLimit } from '../middleware/rate-limit';
+
 const router = express.Router();
 
-// Acess : public
-// POST : login
-// Params body : username , password
-router.post('/login', AuthController.validateLoginData, AuthController.login);
-
-// POST : logout
-
-router.post('/logout', protectAuth, AuthController.logout);
+router.post('/signup', authRateLimit, AuthController.signup);
+router.post('/login', authRateLimit, AuthController.validateLoginData, AuthController.login);
+router.get('/me', requireAuth, AuthController.me);
+router.post('/logout', AuthController.logout);
 
 export default router;

@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true
+  },
+  "include": ["./seed.ts", "../src/lib/prisma.ts", "../src/utils/bcryptHandler.ts", "../src/generated/prisma/index.d.ts"],
+  "exclude": ["../node_modules", "../dist"]
+}

@@ -1,85 +1,54 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import * as categoryService from '../services/category.service';
-import { categorySchema } from '../types/category';
+import { categorySchema, categoryUpdateSchema } from '../types/category';
+import { sendSuccessResponse, sendNotFoundResponse } from '../utils/responseHandler';
 
-export const createCategory = async (req: Request, res: Response) => {
+export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = categorySchema.parse(req.body);
     const category = await categoryService.createCategory(parsed);
-    res.status(201).json({ success: true, data: category });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    return sendSuccessResponse(res, category, 201);
+  } catch (error) {
+    next(error);
   }
 };
 
-export const getCategories = async (_: Request, res: Response) => {
+export const getCategories = async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const categories = await categoryService.getCategories();
-
-    if (!categories || categories.length === 0) {
-      // ✅ Add "return" here
-      return res.status(404).json({ success: false, message: 'No categories found' });
-    }
-
-    const categoryMap: Record<number, any> = {};
-    const rootCategories: any[] = [];
-
-    categories.forEach((cat: any) => {
-      categoryMap[cat.id] = { ...cat, children: [] };
-    });
-
-    categories.forEach((cat: any) => {
-      if (cat.parentId) {
-        categoryMap[cat.parentId]?.children.push(categoryMap[cat.id]);
-      } else {
-        rootCategories.push(categoryMap[cat.id]);
-      }
-    });
-
-    // ✅ Return here too
-    return res.json({ success: true, data: rootCategories });
-  } catch (error: any) {
-    console.error("Error fetching categories:", error);
-    // ✅ Always return the response
-    return res.status(500).json({ success: false, message: error.message });
+    return sendSuccessResponse(res, categories);
+  } catch (error) {
+    next(error);
   }
 };
 
-export const getCategoryById = async (req: Request, res: Response) => {
+export const getCategoryById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id);
-    const category = await categoryService.getCategoryById(id);
-    
+    const category = await categoryService.getCategoryById(req.params.id);
     if (!category) {
-      return res.status(404).json({ success: false, message: 'Category not found' });
+      return sendNotFoundResponse(res, 'Category not found');
     }
-    
-    res.json({ success: true, data: category });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    return sendSuccessResponse(res, category);
+  } catch (error) {
+    next(error);
   }
 };
 
-export const updateCategory = async (req: Request, res: Response) => {
+export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id);
-    const category = await categoryService.updateCategory(id, req.body);
-    res.json({ success: true, data: category });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    const parsed = categoryUpdateSchema.parse(req.body);
+    const category = await categoryService.updateCategory(req.params.id, parsed);
+    return sendSuccessResponse(res, category);
+  } catch (error) {
+    next(error);
   }
 };
 
-export const deleteCategory = async (req: Request, res: Response) => {
+export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id);
-    const children = await categoryService.getSubCategories(id);
-    for (const child of children) {
-      await categoryService.deleteCategory(child.id);
-    }
-    await categoryService.deleteCategory(id);
-    res.json({ success: true, message: 'Category deleted successfully' });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    await categoryService.deleteCategory(req.params.id);
+    return sendSuccessResponse(res, { message: 'Category deleted successfully' });
+  } catch (error) {
+    next(error);
   }
 };

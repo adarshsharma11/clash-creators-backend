@@ -1,12 +1,15 @@
-import { User, Truck } from '@prisma/client';
+import type { UserRole } from '../generated/prisma';
 
-// _____________  Truck Types  _____________
+export type TloginRead = {
+  id: string;
+  email: string;
+  username: string;
+  fullName: string;
+  passwordHash: string | null;
+  avatarUrl: string | null;
+  role: UserRole;
+  isActive: boolean;
+};
 
-export type TTruckID = Truck['id'];
-export type TTruckRead = Omit<Truck, 'createdAt' | 'updatedAt'>;
-export type TTruckWrite = Omit<Truck, 'id' | 'createdAt' | 'updatedAt'>;
-
-// _____________  User Types  _____________
-export type TUserRegisterWrite = Omit<User, 'createdAt' | 'updatedAt'>;
-export type TloginRead = Omit<User, 'createdAt' | 'updatedAt'>;
-export type TloginRequest = Omit<User,'createdAt' | 'updatedAt' | 'password'>;
+export type TloginRequest = Omit<TloginRead, 'passwordHash'>;
+export type TUserRegisterWrite = TloginRead;

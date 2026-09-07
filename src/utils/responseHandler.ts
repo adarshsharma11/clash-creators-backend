@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import HttpStatusCode from './HttpStatusCode';
+import { PaginationMeta } from './pagination';
 
 interface SuccessResponse<T> {
   success: true;
@@ -13,7 +14,6 @@ interface ErrorResponse<T> {
   };
 }
 
-// Success response with data
 export const sendSuccessResponse = <T>(
   res: Response,
   data: T,
@@ -22,7 +22,6 @@ export const sendSuccessResponse = <T>(
   return res.status(status).json({ success: true, data });
 };
 
-// Success response without data (e.g., for delete operations)
 export const sendSuccessNoDataResponse = (
   res: Response,
   message = 'Operation successful',
@@ -31,7 +30,6 @@ export const sendSuccessNoDataResponse = (
   return res.status(status).json({ success: true, message });
 };
 
-// Error response
 export const sendErrorResponse = <T>(
   res: Response,
   message: T,
@@ -40,54 +38,76 @@ export const sendErrorResponse = <T>(
   return res.status(status).json({ success: false, error: { message } });
 };
 
-// Not Found response
 export const sendNotFoundResponse = <T>(
   res: Response,
   message: T,
   status = HttpStatusCode.NOT_FOUND
 ): Response<ErrorResponse<T>> => {
-  return res.status(status).json({ success: false, error: { message } });
+  return res.status(status).json({ success: false, error: { code: 'NOT_FOUND', message } });
 };
 
-// Validation Error response
-export const sendValidationError = <T>(
+export const sendValidationError = (
   res: Response,
-  message: T,
+  message: string,
   errors: string[],
   status = HttpStatusCode.BAD_REQUEST
-): Response<ErrorResponse<T>> => {
+): Response => {
   return res.status(status).json({
     success: false,
     error: {
-      message: message,
-      errors: errors,
+      code: 'VALIDATION_ERROR',
+      message,
+      errors,
     },
   });
 };
 
-// Unauthorized response
-export const sendUnauthorizedResponse = <T>(
+export const sendUnauthorizedResponse = (
   res: Response,
   message = 'Unauthorized',
   status = HttpStatusCode.UNAUTHORIZED
-): Response<ErrorResponse<T>> => {
-  return res.status(status).json({ success: false, error: { message } });
+): Response => {
+  return res.status(status).json({ success: false, error: { code: 'AUTH_UNAUTHORIZED', message } });
 };
 
-// Forbidden response
-export const sendForbiddenResponse = <T>(
+export const sendForbiddenResponse = (
   res: Response,
   message = 'Forbidden',
   status = HttpStatusCode.FORBIDDEN
-): Response<ErrorResponse<T>> => {
-  return res.status(status).json({ success: false, error: { message } });
+): Response => {
+  return res.status(status).json({ success: false, error: { code: 'AUTH_FORBIDDEN', message } });
 };
 
-// Bad Request response
 export const sendBadRequestResponse = <T>(
   res: Response,
   message: T,
   status = HttpStatusCode.BAD_REQUEST
 ): Response<ErrorResponse<T>> => {
   return res.status(status).json({ success: false, error: { message } });
+};
+
+export const sendPaginatedResponse = <T>(
+  res: Response,
+  data: T,
+  pagination: PaginationMeta,
+  status = HttpStatusCode.OK
+): Response => {
+  return res.status(status).json({ success: true, data, pagination });
+};
+
+export const sendCodedErrorResponse = (
+  res: Response,
+  status: number,
+  code: string,
+  message: string,
+  details?: unknown
+): Response => {
+  return res.status(status).json({
+    success: false,
+    error: {
+      code,
+      message,
+      details,
+    },
+  });
 };

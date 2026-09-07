@@ -1,35 +1,57 @@
-import * as UserService from '../services/user.service';
 import { NextFunction, Request, Response } from 'express';
-import { sendBadRequestResponse } from '../utils/responseHandler';
-import { verifyToken } from '../utils/jwtHandler';
+import * as UserService from '../services/user.service';
+import { sendUnauthorizedResponse, sendForbiddenResponse } from '../utils/responseHandler';
+import { verifyUserToken } from '../utils/jwtHandler';
 import { TloginRequest } from '../types/general';
-
+import { USER_COOKIE } from '../utils/cookies';
 
 const protectAuth = async (request: Request, response: Response, next: NextFunction) => {
-  const allCookies = request.cookies;
-  const token = allCookies.jwt;
+  const token = request.cookies?.[USER_COOKIE] as string | undefined;
   if (token) {
     try {
-      const decoded = verifyToken(token);
+      const decoded = verifyUserToken(token);
       const authUser = await UserService.getUserByID(decoded.id);
       if (authUser?.username) {
-      (request as any).user = toLoginRequest(authUser);
+        request.user = toLoginRequest(authUser);
       }
       next();
-    } catch (error: any) {
+    } catch (error) {
       next(error);
     }
   } else {
-    return sendBadRequestResponse(response, 'Unauthorized - you need to login');
+    return sendUnauthorizedResponse(response, 'Unauthorized - you need to login');
   }
 };
 
-export { protectAuth };
-function toLoginRequest(authUser: TloginRequest) {
+const requireAuth = async (request: Request, response: Response, next: NextFunction) => {
+  await protectAuth(request, response, (error?: unknown) => {
+    if (error) {
+      next(error);
+      return;
+    }
+    if (response.headersSent) {
+      return;
+    }
+    if (!request.user) {
+      return sendUnauthorizedResponse(response, 'Unauthorized - you need to login');
+    }
+    if (!request.user.isActive) {
+      return sendForbiddenResponse(response, 'Account is inactive');
+    }
+    next();
+  });
+};
+
+export { protectAuth, requireAuth };
+
+function toLoginRequest(authUser: TloginRequest): TloginRequest {
   return {
     id: authUser.id,
-    fullName: authUser.fullName,
+    email: authUser.email,
     username: authUser.username,
-    email: authUser.email
+    fullName: authUser.fullName,
+    avatarUrl: authUser.avatarUrl,
+    role: authUser.role,
+    isActive: authUser.isActive,
   };
 }

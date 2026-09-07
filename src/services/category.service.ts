@@ -2,25 +2,28 @@ import { db } from '../utils/db.server';
 import { TCategorySchema, TCategoryID, TCategoryUpdate } from '../types/category';
 
 export const createCategory = async (data: TCategorySchema) => {
-  return db.itemCategory.create({ data });
+  return db.category.create({ data });
 };
 
 export const getCategories = async () => {
-  return db.itemCategory.findMany({ orderBy: { id: 'desc' } });
+  return db.category.findMany({
+    where: { isActive: true },
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+  });
 };
 
 export const getCategoryById = async (id: TCategoryID) => {
-  return db.itemCategory.findUnique({ where: { id } });
+  return db.category.findFirst({
+    where: {
+      OR: [{ id }, { slug: id }],
+    },
+  });
 };
 
 export const updateCategory = async (id: TCategoryID, data: TCategoryUpdate) => {
-  return db.itemCategory.update({ where: { id }, data });
+  return db.category.update({ where: { id }, data });
 };
 
 export const deleteCategory = async (id: TCategoryID) => {
-  return db.itemCategory.delete({ where: { id } });
-};
-
-export const getSubCategories = async (id: TCategoryID) => {
-  return db.itemCategory.findMany({ where: { parentId: id } as any });
+  return db.category.delete({ where: { id } });
 };

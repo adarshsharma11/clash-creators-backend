@@ -1,51 +1,37 @@
 import { z } from 'zod';
 
-// _____________  Author Schema  _____________
-
-export const authorSchema = z.object({
-  firstName: z.string().min(1, { message: 'Your first name must be at least 1 characters long' }).max(30, {
-    message: 'your first name cannot be longer than 30 characters',
-  }),
-  lastName: z.string().min(1, { message: 'Your last name must be at least 1 characters long' }).max(30, {
-    message: 'your last name cannot be longer than 30 characters',
-  }),
+export const signupSchema = z.object({
+  fullName: z.string().trim().min(2).max(80),
+  username: z
+    .string()
+    .trim()
+    .min(3)
+    .max(30)
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username may only contain letters, numbers, and underscores')
+    .transform((value) => value.toLowerCase()),
+  email: z.string().trim().email().max(120).transform((value) => value.toLowerCase()),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(72)
+    .regex(/[A-Za-z]/, 'Password must include a letter')
+    .regex(/[0-9]/, 'Password must include a number'),
 });
 
-// _____________  Book Schema  _____________
-
-export const bookSchema = z.object({
-  title: z.string().min(1, { message: 'title must be at least 1 characters long' }).max(250, {
-    message: 'title cannot be longer than 250 characters',
-  }),
-  authorId: z.number(),
-  datePublished: z.date(),
-  isFiction: z.boolean(),
+export const loginSchema = z.object({
+  username: z.string().trim().min(1).max(120).transform((value) => value.toLowerCase()),
+  password: z.string().min(1).max(72),
 });
 
-// _____________  User Schema  Login  _____________
-
-const userBaseSchema = {
-  username: z.string().min(1, { message: 'username must be at least 1 characters long' }).max(50, {
-    message: 'username cannot be longer than 50 characters',
-  }),
-  password: z.string().min(1, { message: 'password must be at least 1 characters long' }).max(50, {
-    message: 'password cannot be longer than 50 characters',
-  }),
-};
-
-export const userSchema = z.object(userBaseSchema);
-
-// _____________  User Update Schema   _____________
+export const userSchema = loginSchema;
 
 export const userUpdateSchema = z.object({
-  ...userBaseSchema,
-  fullName: z.string().min(1, { message: 'fullName must be at least 1 characters long' }).max(50, {
-    message: 'fullName cannot be longer than 50 characters',
-  }),
-  email: z.string().email({ message: 'Invalid email address' }),
+  username: z.string().trim().min(3).max(30).optional(),
+  fullName: z.string().trim().min(2).max(80).optional(),
+  email: z.string().trim().email().max(120).optional(),
+  password: z.string().min(8).max(72).optional(),
 });
 
-// _____________  Export Types   _____________
-
-export type TUserSchema = z.infer<typeof userSchema>;
+export type TSignup = z.infer<typeof signupSchema>;
+export type TUserSchema = z.infer<typeof loginSchema>;
 export type TuserUpdateSchema = z.infer<typeof userUpdateSchema>;
