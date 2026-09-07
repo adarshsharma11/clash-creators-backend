@@ -1,3 +1,4 @@
+import './types/express';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -70,8 +71,8 @@ app.use(errorHandler);
 
 const PORT = env.port;
 
-// app.listen(PORT, () => {
-//   logger.info(`Listening on PORT ${PORT}`);
-// });
+app.listen(PORT, () => {
+  logger.info(`Listening on PORT ${PORT}`);
+});
 
 export default app;

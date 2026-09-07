@@ -108,5 +108,8 @@
   },
   "include": ["src", "src/types"],
   "exclude": ["node_modules", "prisma", "dist", "src/generated"],
+  "ts-node": {
+    "files": true
+  }
   
 }
