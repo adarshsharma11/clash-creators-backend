@@ -1,3 +1,4 @@
+import '../types/express';
 import { NextFunction, Request, Response } from 'express';
 import * as AdminAuthService from '../services/admin-auth.service';
 import * as AdminService from '../services/admin.service';
@@ -7,6 +8,8 @@ import * as SettingsService from '../services/settings.service';
 import * as AuditService from '../services/audit.service';
 import * as WinnerService from '../services/winner.service';
 import * as PaymentService from '../services/payment.service';
+import * as ClashService from '../services/clash.service';
+import { joinClashSchema } from '../types/clash';
 import { comparePasswords } from '../utils/bcryptHandler';
 import { generateToken } from '../utils/jwtHandler';
 import {
@@ -151,6 +154,16 @@ export const updateClash = async (request: Request, response: Response, next: Ne
     const body = updateClashSchema.parse(request.body);
     const clash = await AdminService.updateClash(request.params.id, request.admin?.id ?? '', body);
     return sendSuccessResponse(response, clash);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addClashParticipant = async (request: Request, response: Response, next: NextFunction) => {
+  try {
+    const body = joinClashSchema.parse(request.body);
+    const result = await ClashService.joinClash(request.params.id, body, { asAdmin: true });
+    return sendSuccessResponse(response, result, HttpStatusCode.CREATED);
   } catch (error) {
     next(error);
   }

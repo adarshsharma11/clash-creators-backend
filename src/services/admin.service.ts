@@ -72,6 +72,7 @@ export const listAdminCreators = async (query: TAdminCreatorQuery) => {
           { displayName: { contains: query.search, mode: 'insensitive' } },
           { user: { username: { contains: query.search, mode: 'insensitive' } } },
           { user: { email: { contains: query.search, mode: 'insensitive' } } },
+          { socialAccounts: { some: { username: { contains: query.search, mode: 'insensitive' } } } },
         ]
       : undefined,
   };
@@ -90,12 +91,26 @@ export const listAdminCreators = async (query: TAdminCreatorQuery) => {
         createdAt: true,
         user: { select: { username: true, fullName: true, email: true, isActive: true } },
         category: { select: { name: true, slug: true } },
+        socialAccounts: {
+          select: { username: true, isPrimary: true },
+          orderBy: { isPrimary: 'desc' },
+        },
       },
     }),
     db.creatorProfile.count({ where }),
   ]);
 
-  return { items, pagination: buildPagination(page, limit, total) };
+  return {
+    items: items.map((item) => ({
+      ...item,
+      username:
+        item.user?.username ??
+        item.socialAccounts.find((account) => account.isPrimary)?.username ??
+        item.socialAccounts[0]?.username ??
+        null,
+    })),
+    pagination: buildPagination(page, limit, total),
+  };
 };
 
 export const updateCreatorStatus = async (

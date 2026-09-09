@@ -4,9 +4,10 @@ import { conflict, forbidden, notFound } from '../utils/AppError';
 import { buildPagination, getPagination } from '../utils/pagination';
 import { TClashQuery, TJoinClash } from '../types/clash';
 import { TPaginationQuery } from '../types/common';
-import { canJoinClash } from '../domain/clash-rules';
+import { canAdminAddParticipant, canJoinClash } from '../domain/clash-rules';
 import { socialProfileUrl, toSocialPlatform, type JoinPlatform } from '../domain/join-identity';
 import { getClashLeaderboard, getClashLeaderboardRows } from './leaderboard.service';
+import { publicCreatorSelect, withPublicUsername } from './public-creator';
 
 const publicCategorySelect = {
   id: true,
@@ -15,23 +16,7 @@ const publicCategorySelect = {
   icon: true,
 } as const;
 
-const publicCreatorSelect = {
-  id: true,
-  displayName: true,
-  avatarUrl: true,
-  user: {
-    select: {
-      username: true,
-      fullName: true,
-      avatarUrl: true,
-    },
-  },
-} as const;
-
-const joinCreatorSelect = {
-  ...publicCreatorSelect,
-  status: true,
-} as const;
+const joinCreatorSelect = publicCreatorSelect;
 
 type JoinClashResult = {
   joined: true;
@@ -149,7 +134,7 @@ export const getClashById = async (idOrSlug: string) => {
       const row = pointsByCreator.get(participant.creatorId);
       return {
         joinedAt: participant.joinedAt,
-        creator: participant.creator,
+        creator: withPublicUsername(participant.creator),
         points: row?.points ?? 0,
         rank: row?.rank ?? null,
       };
@@ -164,7 +149,7 @@ export const getClashById = async (idOrSlug: string) => {
       ? {
           rank: winner.rank,
           points: winner.points,
-          creator: winner.creator,
+          creator: withPublicUsername(winner.creator),
         }
       : null,
   };
@@ -195,7 +180,7 @@ export const getClashWinner = async (idOrSlug: string) => {
     },
     rank: winner.rank,
     points: winner.points,
-    creator: winner.creator,
+    creator: withPublicUsername(winner.creator),
   };
 };
 
@@ -277,7 +262,11 @@ const resolveJoinCreator = async (input: { username: string; platform: JoinPlatf
   }
 };
 
-export const joinClash = async (idOrSlug: string, input: TJoinClash): Promise<JoinClashResult> => {
+export const joinClash = async (
+  idOrSlug: string,
+  input: TJoinClash,
+  options: { asAdmin?: boolean } = {}
+): Promise<JoinClashResult> => {
   const clash = await db.clash.findFirst({
     where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
   });
@@ -317,7 +306,7 @@ export const joinClash = async (idOrSlug: string, input: TJoinClash): Promise<Jo
       participant: {
         id: existing.id,
         joinedAt: existing.joinedAt,
-        creator: existing.creator,
+        creator: withPublicUsername(existing.creator),
       },
       clash: clashPayload,
     });
@@ -342,20 +331,26 @@ export const joinClash = async (idOrSlug: string, input: TJoinClash): Promise<Jo
           participant: {
             id: already.id,
             joinedAt: already.joinedAt,
-            creator: already.creator,
+            creator: withPublicUsername(already.creator),
           },
           clash: clashPayload,
         });
       }
 
       const participantCount = await tx.clashParticipant.count({ where: { clashId: clash.id } });
-      const joinCheck = canJoinClash({
-        clashStatus: clash.status,
-        endsAt: clash.endsAt,
-        now: new Date(),
-        maxParticipants: clash.maxParticipants,
-        participantCount,
-      });
+      const joinCheck = options.asAdmin
+        ? canAdminAddParticipant({
+            clashStatus: clash.status,
+            maxParticipants: clash.maxParticipants,
+            participantCount,
+          })
+        : canJoinClash({
+            clashStatus: clash.status,
+            endsAt: clash.endsAt,
+            now: new Date(),
+            maxParticipants: clash.maxParticipants,
+            participantCount,
+          });
       if (!joinCheck.ok) {
         throw forbidden(joinCheck.reason, joinCheck.code);
       }
@@ -375,7 +370,7 @@ export const joinClash = async (idOrSlug: string, input: TJoinClash): Promise<Jo
         participant: {
           id: participant.id,
           joinedAt: participant.joinedAt,
-          creator: participant.creator,
+          creator: withPublicUsername(participant.creator),
         },
         clash: clashPayload,
       });
