@@ -10,7 +10,7 @@ import { prisma } from '../src/lib/prisma';
 import { hashPassword } from '../src/utils/bcryptHandler';
 import { v4 as uuidv4 } from 'uuid';
 
-const SEED_NOW = new Date('2026-09-07T09:00:00.000Z');
+const SEED_NOW = new Date();
 const DEV_PASSWORD = 'DevPassword123!';
 
 function hoursFromNow(hours: number): Date {
