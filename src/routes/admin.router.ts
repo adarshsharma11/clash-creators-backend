@@ -16,6 +16,7 @@ router.patch('/creators/:id/status', requireAdmin, requireRole('ADMIN'), AdminCo
 router.get('/clashes', requireAdmin, requireRole('ADMIN'), AdminController.listClashes);
 router.post('/clashes', requireAdmin, requireRole('ADMIN'), AdminController.createClash);
 router.patch('/clashes/:id', requireAdmin, requireRole('ADMIN'), AdminController.updateClash);
+router.post('/clashes/:id/participants', requireAdmin, requireRole('ADMIN'), AdminController.addClashParticipant);
 router.post('/clashes/:id/complete', requireAdmin, requireRole('ADMIN'), AdminController.completeClash);
 
 router.get('/reports', requireAdmin, AdminController.listReports);

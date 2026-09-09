@@ -6,19 +6,7 @@ import { getClashLeaderboardRows } from './leaderboard.service';
 import { createAuditLog } from './audit.service';
 import { buildPagination, getPagination } from '../utils/pagination';
 import { TPaginationQuery } from '../types/common';
-
-const publicCreatorSelect = {
-  id: true,
-  displayName: true,
-  avatarUrl: true,
-  user: {
-    select: {
-      username: true,
-      fullName: true,
-      avatarUrl: true,
-    },
-  },
-} as const;
+import { publicCreatorSelect, withPublicUsername } from './public-creator';
 
 export const listWinners = async (query: TPaginationQuery & { category?: string; clashId?: string; from?: Date; to?: Date }) => {
   const { page, limit, skip, take } = getPagination(query);
@@ -57,7 +45,7 @@ export const listWinners = async (query: TPaginationQuery & { category?: string;
       rank: winner.rank,
       points: winner.points,
       createdAt: winner.createdAt,
-      creator: winner.creator,
+      creator: withPublicUsername(winner.creator),
       clash: winner.clash,
     })),
     pagination: buildPagination(page, limit, total),

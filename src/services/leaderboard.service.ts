@@ -2,20 +2,7 @@ import { db } from '../utils/db.server';
 import { rankLeaderboard, RankedLeaderboardRow } from '../domain/leaderboard';
 import { buildPagination, getPagination } from '../utils/pagination';
 import { TPaginationQuery } from '../types/common';
-
-const publicCreatorSelect = {
-  id: true,
-  displayName: true,
-  avatarUrl: true,
-  status: true,
-  user: {
-    select: {
-      username: true,
-      fullName: true,
-      avatarUrl: true,
-    },
-  },
-} as const;
+import { publicCreatorSelect, withPublicUsername } from './public-creator';
 
 export const getClashLeaderboardRows = async (clashId: string): Promise<RankedLeaderboardRow[]> => {
   const participants = await db.clashParticipant.findMany({
@@ -100,7 +87,10 @@ export const getHomepageLeaderboard = async (query: {
       rank: skip + index + 1,
       points: row._sum.points ?? 0,
       supportCount: row._count._all,
-      creator: creatorById.get(row.creatorId) ?? null,
+      creator: (() => {
+        const creator = creatorById.get(row.creatorId);
+        return creator ? withPublicUsername(creator) : null;
+      })(),
     })),
     pagination: buildPagination(page, limit, total),
   };
@@ -122,7 +112,10 @@ export const getClashLeaderboard = async (clashId: string, query: TPaginationQue
       rank: row.rank,
       points: row.points,
       supportCount: row.supportCount,
-      creator: creatorById.get(row.creatorId) ?? null,
+      creator: (() => {
+        const creator = creatorById.get(row.creatorId);
+        return creator ? withPublicUsername(creator) : null;
+      })(),
     })),
     pagination: buildPagination(page, limit, ranked.length),
   };

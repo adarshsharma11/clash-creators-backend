@@ -1,5 +1,19 @@
 import { ClashStatus } from '../generated/prisma';
 
+export const canAdminAddParticipant = (input: {
+  clashStatus: ClashStatus;
+  maxParticipants: number | null;
+  participantCount: number;
+}): { ok: true } | { ok: false; reason: string; code: 'CLASH_NOT_ACTIVE' | 'CLASH_FULL' } => {
+  if (input.clashStatus !== ClashStatus.UPCOMING && input.clashStatus !== ClashStatus.LIVE) {
+    return { ok: false, reason: 'This clash is not available for joining', code: 'CLASH_NOT_ACTIVE' };
+  }
+  if (input.maxParticipants !== null && input.participantCount >= input.maxParticipants) {
+    return { ok: false, reason: 'This clash is full', code: 'CLASH_FULL' };
+  }
+  return { ok: true };
+};
+
 export const canJoinClash = (input: {
   clashStatus: ClashStatus;
   endsAt: Date;
